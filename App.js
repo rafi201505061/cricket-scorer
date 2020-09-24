@@ -1,21 +1,46 @@
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { createAppContainer, createSwitchNavigator } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
+import {
+  HomeScreen, TeamsScreen, TossScreen,
+  MainScreen, OpenersScreen, Team1PlayersScreen, Team2PlayersScreen,
+  ScoreCardScreen,CreateMatchScreen
+} from './src/screens';
+import { Provider as ThemeProvider } from './src/Context/ThemeContext';
+import { Provider as DataProvider } from './src/Context/DataContext';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+const navigator = createSwitchNavigator({
+  HomeFlow: createStackNavigator({
+    Home:HomeScreen,
+    CreateMatch:CreateMatchScreen,
+    Team1Players: Team1PlayersScreen,
+    Team2Players: Team2PlayersScreen,
+    Openers: OpenersScreen,
+    ScoreCardScreen:ScoreCardScreen
+  }, {
+    initialRouteName: 'Home',
+    defaultNavigationOptions: {
+      headerStyle: {
+        backgroundColor: '#f0245a',
+        elevation:0,
+        shadowOpacity:0
+      },
+      headerTintColor: '#36332b',
+      headerTitleStyle: {
+        fontWeight:'100',
+        alignSelf: 'center'
+      }
+    }
+  }),
+  Main:MainScreen
 });
+
+const App = createAppContainer(navigator);
+
+export default () => {
+  return <ThemeProvider>
+    <DataProvider>
+      <App />
+    </DataProvider>
+  </ThemeProvider>
+}
