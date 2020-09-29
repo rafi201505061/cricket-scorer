@@ -1,17 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableHighlight, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal } from 'react-native';
 import SlideList from './SlideList';
 
 const defaultColor = '#f0245a';
-
-const ModalInningsChange = ({ modalText, isVisible, onSubmit, slideListValues,onSelectOpeningBowler,onSelectNonStriker, onSelectStriker,data }) => {
-  /*
-  modalText: header of modal(String)
-  isVisible: modal visibility(boolean)
-  onSubmit: submit button click handler.params:none(function)
-  slideListValue: SlideList Value property {object{isClicked:boolean,selected:string}}
-  onSelect: SlideList onSelect functionCall
-  */
+const ModalInningsChange = ({ modalText, disabled, isVisible, onSubmit, slideListValues, onSelectOpeningBowler, onSelectNonStriker, onSelectStriker, data }) => {
   return <Modal
     animationType="slide"
     transparent={true}
@@ -20,37 +12,44 @@ const ModalInningsChange = ({ modalText, isVisible, onSubmit, slideListValues,on
     }}
   >
     <View style={styles.centeredView}>
-    <Text style={styles.modalText}>{modalText}</Text>
+      <Text style={styles.modalText}>{modalText}</Text>
       <View style={styles.modalView}>
-        <View style={{flexDirection:'row'}}>
-          <View style={{flex:1,alignSelf:'center'}}>
+        <Text style={{ ...styles.modalText, fontSize: 12 }}>
+          ** striker and non striker must be different **
+      </Text>
+        <View style={{ flexDirection: 'row' }}>
+          <View style={{ flex: 1, alignSelf: 'center' }}>
             <Text style={styles.modalText}>striker : </Text>
           </View>
-          <View style={{flex:4}}>
+          <View style={{ flex: 4 }}>
             <SlideList
               data={data.batsmen}
               value={slideListValues.striker}
-              onSelect={(isClicked, selected) => { onSelectStriker(isClicked, selected) }}
+              onSelect={(isClicked, selected) => {
+                onSelectStriker(isClicked, selected);
+              }}
             />
           </View>
         </View>
-        <View style={{flexDirection:'row'}}>
-          <View style={{flex:1,alignSelf:'center'}}>
+        <View style={{ flexDirection: 'row' }}>
+          <View style={{ flex: 1, alignSelf: 'center' }}>
             <Text style={styles.modalText}>non striker : </Text>
           </View>
-          <View style={{flex:4}}>
+          <View style={{ flex: 4 }}>
             <SlideList
               data={data.batsmen}
               value={slideListValues.nonStriker}
-              onSelect={(isClicked, selected) => { onSelectNonStriker(isClicked, selected) }}
+              onSelect={(isClicked, selected) => {
+                onSelectNonStriker(isClicked, selected);
+              }}
             />
           </View>
         </View>
-        <View style={{flexDirection:'row'}}>
-          <View style={{flex:1,alignSelf:'center'}}>
+        <View style={{ flexDirection: 'row' }}>
+          <View style={{ flex: 1, alignSelf: 'center' }}>
             <Text style={styles.modalText}>opening bowler : </Text>
           </View>
-          <View style={{flex:4}}>
+          <View style={{ flex: 4 }}>
             <SlideList
               data={data.bowlers}
               value={slideListValues.openingBowler}
@@ -58,12 +57,13 @@ const ModalInningsChange = ({ modalText, isVisible, onSubmit, slideListValues,on
             />
           </View>
         </View>
-        <TouchableHighlight
-          style={{ ...styles.openButton, backgroundColor: '#f0245a' }}
+        <TouchableOpacity
+          disabled={disabled}
+          style={{ ...styles.openButton}}
           onPress={() => onSubmit()}
         >
           <Text style={styles.textStyle}>submit</Text>
-        </TouchableHighlight>
+        </TouchableOpacity>
       </View>
     </View>
   </Modal>
@@ -74,9 +74,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
     backgroundColor: 'black',
-    opacity: .8
+    opacity: 1
   },
   modalView: {
     margin: 20,
@@ -97,12 +96,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 10,
     padding: 5,
-    elevation: 2
+    borderWidth:2,
+    borderColor:'#f0245a'
   },
   textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center"
+    color: "#f0245a",
+    fontWeight: "bold"
   },
   modalText: {
     color: '#f0245a',

@@ -7,3 +7,5 @@ export * from './Team1PlayersScreen';
 export * from './Team2PlayersScreen';
 export * from './ScoreCardScreen';
 export * from './CreateMatchScreen';
+export * from './BarChartsScreen';
+export * from './LineChartScreen';

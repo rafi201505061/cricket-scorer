@@ -8,19 +8,19 @@ const BowlingScoreCardHeader = () => {
     <View style={{...styles.textWrapperStyle,flex:5}}>
       <Text style={styles.textStyle}>Name</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:2}}>
-      <Text style={styles.textStyle}>Overs</Text>
+    <View style={{...styles.textWrapperStyle,flex:1}}>
+      <Text style={styles.textStyle}>O</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:2}}>
-      <Text style={styles.textStyle}>Runs</Text>
+    <View style={{...styles.textWrapperStyle,flex:1}}>
+      <Text style={styles.textStyle}>R</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:1.2}}>
-      <Text style={styles.textStyle}>Wk</Text>
+    <View style={{...styles.textWrapperStyle,flex:.7}}>
+      <Text style={styles.textStyle}>W</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:1.2}}>
+    <View style={{...styles.textWrapperStyle,flex:.7}}>
       <Text style={styles.textStyle}>Dot</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:2}}>
+    <View style={{...styles.textWrapperStyle,flex:1.5}}>
       <Text style={styles.textStyle}>Econ</Text>
     </View>
   </View>

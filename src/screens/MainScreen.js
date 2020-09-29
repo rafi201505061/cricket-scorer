@@ -1,5 +1,6 @@
 import React, { useContext, useState, useReducer, useEffect } from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { StyleSheet, View, Image, TouchableOpacity, BackHandler } from 'react-native';
+import Alert from '../components/Alert';
 import { Context as DataContext } from '../Context/DataContext';
 import ButtonGroup from '../components/ButtonGroup';
 import ScoreCard from '../components/ScoreCard';
@@ -8,6 +9,7 @@ import ThisOver from '../components/ThisOver';
 import CusBottomSheet from '../components/CusBottomSheet';
 import RoundButton from '../components/RoundButton';
 import CusModal from '../components/CusModal';
+import Icon from 'react-native-vector-icons/AntDesign';
 import Button from '../components/Button';
 import ModalInningsChange from '../components/ModalInningsChange';
 import ModalGameOver from '../components/ModalGameOver';
@@ -86,6 +88,7 @@ const MainScreen = ({ navigation }) => {
     nonStriker: { isClicked: false, seleted: '' },
     openingBowler: { isClicked: false, seleted: '' }
   })
+  const [showAlert, setShowAlert] = useState(false);
 
   const numFunc = (type, payload) => addRuns(type, payload);
   const func2 = (type, payload) => setBottomSheet({
@@ -192,28 +195,51 @@ const MainScreen = ({ navigation }) => {
   //console.log(State.inningsChange,State.modalVisible);
 
   useEffect(() => {
-    const listener = navigation.addListener('didFocus', () => {
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => {
+      navigation.goBack(null);
+      return true;
     });
-
-    return () => {
-      listener.remove();
-    }
+    return () => listener.remove()
   }, [])
 
   return <>
     <View style={{
-      alignItems: 'center', justifyContent: 'center',
-      height: 75, backgroundColor: '#f0245a'
+      flexDirection: 'row',
+      height: 65, backgroundColor: '#f0245a'
     }}>
-      <Image
-        source={require('../../assets/logo1.png')}
-        style={{
-          height: 50,
-          width: 50,
-          alignSelf: 'center'
-        }}
-      />
+      <View style={{ flex: .9, alignItems: 'flex-start', justifyContent: 'center' }}>
+        <TouchableOpacity onPress={() => setShowAlert(true)}>
+          <Icon
+            style={{ marginLeft: 10,marginTop:10 }}
+            name='home'
+            size={26}
+            color='#515452'
+          />
+        </TouchableOpacity>
+      </View>
+      <View style={{ flex: 1.1, alignItems: 'flex-start', justifyContent: 'center' }}>
+        <Image
+          source={require('../../assets/logo1.png')}
+          style={{
+            height: 50,
+            width: 50,marginTop:10
+          }}
+        />
+      </View>
     </View>
+    {
+      showAlert
+        ? <Alert
+          isVisible={showAlert}
+          header='Current progress will be lost.Do you want to continue?'
+          nfAction={() => setShowAlert(false)}
+          pfAction={() => {
+            setShowAlert(false);
+            navigation.navigate('Home');
+          }}
+        />
+        : null
+    }
     <ScoreCard
       playerInfos={[State.player1, State.player2]}
       teamInfo={State.battingTeam === 'team1'
@@ -234,14 +260,20 @@ const MainScreen = ({ navigation }) => {
       size={40}
       data={buttons}
     />
-    <CusBottomSheet
-      isVisible={bottomSheet.isVisible}
-      data={bottomSheetdata}
-      calledBy={bottomSheet.calledBy}
-      changeVisibility={() => setBottomSheet({ ...bottomSheet, isVisible: false })}
-      header='How many runs are scored in this ball?'
-      type='0'
-    />
+    {bottomSheet.isVisible ?
+      <CusBottomSheet
+        dataList={{
+          onStrikeBatsmen: [State.player1.name, State.player2.name],
+          fielders,
+          battingContenders
+        }}
+        isVisible={bottomSheet.isVisible}
+        data={bottomSheetdata}
+        calledBy={bottomSheet.calledBy}
+        changeVisibility={() => setBottomSheet({ ...bottomSheet, isVisible: false })}
+        header='How many runs are scored in this ball?'
+        type='0'
+      /> : null}
     <View style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
       <Button name='Change Bowler' color='#f0245a' onPress={() => {
         changeBowlerVisibility()
@@ -257,67 +289,83 @@ const MainScreen = ({ navigation }) => {
           })}
       />
     </View>
-
-    <CusBottomSheet
-      dataList={{
-        onStrikeBatsmen: [State.player1.name, State.player2.name],
-        fielders,
-        battingContenders
-      }}
-      isVisible={showWicketBottomSheet.isVisible}
-      data={wicketBottomSheetData}
-      calledBy='Wkt'
-      changeVisibility={() => setShowWicketBottomSheet({ type: '0', isVisible: false })}
-      header='Type of wicket:'
-      type={showWicketBottomSheet.type}
-    />
-    <ModalGameOver
-      isVisible={State.gameFinished}
-      modalText='Game is Over'
-      onSubmit={() => saveMatch(State, () => { navigation.navigate('Home') })}
-    />
-    <ModalInningsChange
-      data={inningsChangeData}
-      modalText='Change Innings.'
-      isVisible={State.inningsChange}
-      slideListValues={inningsChangeDetails}
-      onSelectNonStriker={(isClicked, selected) => dispatch({
-        type: 'non_striker',
-        payload: { isClicked, selected }
-      })}
-      onSelectOpeningBowler={(isClicked, selected) => dispatch({
-        type: 'opening_bowler',
-        payload: { isClicked, selected }
-      })}
-      onSelectStriker={(isClicked, selected) => dispatch({
-        type: 'striker',
-        payload: { isClicked, selected }
-      })}
-      onSubmit={() => changeInnings(inningsChangeDetails)}
-    />
-    <CusModal
-      data={bowlerContenders}
-      modalText='This over is complete.Select next bowler.'
-      isVisible={State.modalVisible}
-      slideListValue={nextBowler}
-      onSelect={(isClicked, selected) => selectNextBowler({ isClicked, selected })}
-      onSubmit={() => {
-        setNextBowler(nextBowler.selected);
-        selectNextBowler({ isClicked: false, selected: '' })
-      }}
-    />
-    <CusModal
-      data={bowlerContenders}
-      modalText='Current bowler is injured? Select next bowler.'
-      isVisible={State.changeBowler}
-      slideListValue={changedBowler}
-      onSelect={(isClicked, selected) => setChangedBowler({ isClicked, selected })}
-      onSubmit={() => {
-        changeBowler(changedBowler.selected);
-        setChangedBowler({ isClicked: false, selected: '' })
-      }
-      }
-    />
+    {showWicketBottomSheet.isVisible ?
+      <CusBottomSheet
+        dataList={{
+          onStrikeBatsmen: [State.player1.name, State.player2.name],
+          fielders,
+          battingContenders
+        }}
+        isVisible={showWicketBottomSheet.isVisible}
+        data={wicketBottomSheetData}
+        calledBy='Wkt'
+        changeVisibility={() => setShowWicketBottomSheet({ type: '0', isVisible: false })}
+        header='Type of wicket:'
+        type={showWicketBottomSheet.type}
+      /> : null}
+    {
+      State.gameFinished ? <ModalGameOver
+        isVisible={State.gameFinished}
+        modalText='Game is Over'
+        onSubmit={() => saveMatch(State, () => { navigation.navigate('Home') })}
+      /> : null
+    }
+    {
+      State.inningsChange ?
+        <ModalInningsChange
+          disabled={
+            inningsChangeDetails.striker.selected === inningsChangeDetails.nonStriker.selected
+              ? true 
+              : false
+          }
+          data={inningsChangeData}
+          modalText='Change Innings.'
+          isVisible={State.inningsChange}
+          slideListValues={inningsChangeDetails}
+          onSelectNonStriker={(isClicked, selected) => dispatch({
+            type: 'non_striker',
+            payload: { isClicked, selected }
+          })}
+          onSelectOpeningBowler={(isClicked, selected) => dispatch({
+            type: 'opening_bowler',
+            payload: { isClicked, selected }
+          })}
+          onSelectStriker={(isClicked, selected) => dispatch({
+            type: 'striker',
+            payload: { isClicked, selected }
+          })}
+          onSubmit={() => changeInnings(inningsChangeDetails)}
+        /> : null
+    }
+    {State.modalVisible
+      ? <CusModal
+        data={bowlerContenders}
+        modalText='This over is complete.Select next bowler.'
+        isVisible={State.modalVisible}
+        slideListValue={nextBowler}
+        onSelect={(isClicked, selected) => selectNextBowler({ isClicked, selected })}
+        onSubmit={() => {
+          setNextBowler(nextBowler.selected);
+          selectNextBowler({ isClicked: false, selected: '' })
+        }}
+      />
+      : null
+    }
+    {State.changeBowler
+      ? <CusModal
+        data={bowlerContenders}
+        modalText='Current bowler is injured? Select next bowler.'
+        isVisible={State.changeBowler}
+        slideListValue={changedBowler}
+        onSelect={(isClicked, selected) => setChangedBowler({ isClicked, selected })}
+        onSubmit={() => {
+          changeBowler(changedBowler.selected);
+          setChangedBowler({ isClicked: false, selected: '' })
+        }
+        }
+      />
+      : null
+    }
   </>
 }
 

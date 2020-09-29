@@ -10,7 +10,7 @@ const outString = (action) => {
     case 'Bowled':
       return `b ${action.payload.bowler}`;
     case 'Hit_out':
-      return `Hit out ${action.payload.bowler}`;
+      return `Hit out b ${action.payload.bowler}`;
     case 'LBW':
       return `lbw ${action.payload.bowler}`;
     case 'caught':
@@ -43,7 +43,7 @@ const ScoreCardRow = ({ playerInfo }) => {
       /> : null
       }
       {playerInfo.out === true
-        ? <Text style={{color:defaultColor,fontSize:12}}>
+        ? <Text style={{color:defaultColor,fontSize:12,marginRight:4}}>
         {outString({type:playerInfo.type,payload:{
           catcher:playerInfo.catcher,
           thrower:playerInfo.thrower,
@@ -53,20 +53,21 @@ const ScoreCardRow = ({ playerInfo }) => {
         : null
       }
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 2 }}>
-      <Text style={styles.textStyle}>{playerInfo.balls !== 0 ? playerInfo.runs : ''}</Text>
+    <View style={{ ...styles.textWrapperStyle, flex: 1 }}>
+      <Text style={styles.textStyle}>{playerInfo.battingPosition !== -1 ? playerInfo.runs : ''}</Text>
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 2 }}>
-      <Text style={styles.textStyle}>{playerInfo.balls !== 0 ? playerInfo.balls : ''}</Text>
+    <View style={{ ...styles.textWrapperStyle, flex: 1 }}>
+      <Text style={styles.textStyle}>{playerInfo.battingPosition !== -1 ? playerInfo.balls : ''}</Text>
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 1.2 }}>
-      <Text style={styles.textStyle}>{playerInfo.balls !== 0 ? playerInfo.fours : ''}</Text>
+    <View style={{ ...styles.textWrapperStyle, flex: .7 }}>
+      <Text style={styles.textStyle}>{playerInfo.battingPosition !== -1 ? playerInfo.fours : ''}</Text>
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 1.2 }}>
-      <Text style={styles.textStyle}>{playerInfo.balls !== 0 ? playerInfo.sixes : ''}</Text>
+    <View style={{ ...styles.textWrapperStyle, flex: .7 }}>
+      <Text style={styles.textStyle}>{playerInfo.battingPosition !== -1 ? playerInfo.sixes : ''}</Text>
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 2 }}>
-      <Text style={styles.textStyle}>{playerInfo.balls !== 0 ? (((playerInfo.runs * 1.0) / playerInfo.balls) * 100.0).toFixed(2) : ''}</Text>
+    <View style={{ ...styles.textWrapperStyle, flex: 1.5 }}>
+      <Text style={styles.textStyle}>{playerInfo.battingPosition !== -1 
+        ? (playerInfo.balls === 0?(0.0).toFixed(2):(((playerInfo.runs * 1.0) / playerInfo.balls) * 100.0).toFixed(2)) : ''}</Text>
     </View>
   </View>
 }

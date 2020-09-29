@@ -8,19 +8,19 @@ const BowlingScoreCardRow = ({ playerInfo }) => {
     <View style={{ ...styles.nameWrapper, flex: 5, flexDirection: 'row' }}>
       <Text style={{ ...styles.textStyle }}>{playerInfo.name}</Text>
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 2 }}>
+    <View style={{ ...styles.textWrapperStyle, flex: 1 }}>
       <Text style={styles.textStyle}>{Math.floor(playerInfo.overs/6)}.{playerInfo.overs%6}</Text>
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 2 }}>
+    <View style={{ ...styles.textWrapperStyle, flex: 1 }}>
       <Text style={styles.textStyle}>{playerInfo.runs}</Text>
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 1.2 }}>
+    <View style={{ ...styles.textWrapperStyle, flex: .7 }}>
       <Text style={styles.textStyle}>{playerInfo.wickets}</Text>
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 1.2 }}>
+    <View style={{ ...styles.textWrapperStyle, flex: .7 }}>
       <Text style={styles.textStyle}>{playerInfo.dots}</Text>
     </View>
-    <View style={{ ...styles.textWrapperStyle, flex: 2 }}>
+    <View style={{ ...styles.textWrapperStyle, flex: 1.5 }}>
       <Text style={styles.textStyle}>{((playerInfo.runs/playerInfo.overs)*6.0).toFixed(2)}</Text>
     </View>
   </View>

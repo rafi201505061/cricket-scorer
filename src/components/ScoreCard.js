@@ -5,43 +5,62 @@ import ScoreCardHeader from './ScoreCardHeader';
 
 const defaultColor = '#f0245a';
 
-const ScoreCard = ({ playerInfos, teamInfo,teamName,target }) => {
+const ScoreCard = ({ playerInfos, teamInfo, teamName, target }) => {
   return <View>
     <View style={styles.scoreHeaderStyle}>
-      <View style={{...styles.textWrapperStyle,flex:1}}>
+      <View style={{ ...styles.textWrapperStyle, flex: 1 }}>
         <Text style={styles.textStyle}>{teamName}</Text>
       </View>
-      <View style={{...styles.textWrapperStyle,flex:1}}>
+      <View style={{ ...styles.textWrapperStyle, flex: 1 }}>
         <Text style={styles.textStyle}>Score:{teamInfo.runs}/{teamInfo.wickets}</Text>
-        {target?<Text style={{color:defaultColor,alignSelf:'center'}}>Target:{target}</Text>:null}
+        {
+          target
+            ? <Text style={{ color: defaultColor, alignSelf: 'center' }}>
+              Target:{target}
+            </Text>
+            : null
+        }
       </View>
-      <View style={{...styles.textWrapperStyle,flex:1}}>
-        <Text style={styles.textStyle}>Overs:{Math.floor(teamInfo.overs/6)}.{teamInfo.overs%6}</Text>
+      <View style={{ ...styles.textWrapperStyle, flex: 1 }}>
+        <Text style={styles.textStyle}>
+          Overs:{Math.floor(teamInfo.overs / 6)}.{teamInfo.overs % 6}
+        </Text>
       </View>
     </View>
-    <View style={{backgroundColor:'#515452'}}>
-    {target?<Text style={{color:defaultColor,alignSelf:'center'}}>{target-teamInfo.runs} required from {teamInfo.totalOvers-teamInfo.overs} balls</Text>:null}
-    
+    <View style={{ backgroundColor: '#515452' }}>
+      {
+        target
+          ? <View style={{justifyContent:'space-between',flexDirection:'row'}}>
+            <Text style={{ color: defaultColor, alignSelf: 'center',marginLeft:10 }}>
+              {target - teamInfo.runs} required from {teamInfo.totalOvers - teamInfo.overs} balls
+        </Text>
+        <Text style={{ color: defaultColor, alignSelf: 'center',marginRight:10 }}>
+              Required RR: {(((target - teamInfo.runs)/(teamInfo.totalOvers - teamInfo.overs))*6.0).toFixed(2)}
+        </Text>
+          </View>
+          : null
+      }
+
     </View>
-    <ScoreCardHeader/>
-    {playerInfos.map((item)=><ScoreCardRow key={item.name+item.balls+item.runs+item.battingPosition}
-     playerInfo={item}/>)}
+    <ScoreCardHeader />
+    {playerInfos.map((item) => <ScoreCardRow key={item.name + item.balls + item.runs + item.battingPosition}
+      playerInfo={item} />)}
   </View>
 }
 
 const styles = StyleSheet.create({
   scoreHeaderStyle: {
     flexDirection: 'row',
-    backgroundColor:'#515452'
+    backgroundColor: '#515452'
   },
-  textStyle:{
+  textStyle: {
     fontSize: 16,
     fontWeight: '500',
     color: defaultColor
   },
-  textWrapperStyle:{
-    alignItems:'center',
-    justifyContent:'center'
+  textWrapperStyle: {
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 });
 

@@ -9,20 +9,20 @@ const ScoreCardHeader = () => {
     <View style={{...styles.textWrapperStyle,flex:5}}>
       <Text style={styles.textStyle}>Name</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:2}}>
-      <Text style={styles.textStyle}>Runs</Text>
+    <View style={{...styles.textWrapperStyle,flex:1}}>
+      <Text style={styles.textStyle}>R</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:2}}>
-      <Text style={styles.textStyle}>Balls</Text>
+    <View style={{...styles.textWrapperStyle,flex:1}}>
+      <Text style={styles.textStyle}>B</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:1.2}}>
-      <Text style={styles.textStyle}>4s</Text>
+    <View style={{...styles.textWrapperStyle,flex:.7}}>
+      <Text style={styles.textStyle}>4</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:1.2}}>
-      <Text style={styles.textStyle}>6s</Text>
+    <View style={{...styles.textWrapperStyle,flex:.7}}>
+      <Text style={styles.textStyle}>6</Text>
     </View>
-    <View style={{...styles.textWrapperStyle,flex:2}}>
-      <Text style={styles.textStyle}>S.R.</Text>
+    <View style={{...styles.textWrapperStyle,flex:1.5}}>
+      <Text style={styles.textStyle}>SR</Text>
     </View>
   </View>
 

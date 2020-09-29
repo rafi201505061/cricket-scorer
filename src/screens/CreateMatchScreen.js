@@ -13,7 +13,9 @@ const reducer = (state, action) => {
     case 'players_a_side':
       {
         let errorMessage = '';
-        if (!(/[5-9]|10|11/.test(action.payload))) {
+        if (!(/^\d+$/.test(action.payload)
+          && parseInt(action.payload) >= 5
+          && parseInt(action.payload) <= 11)) {
           errorMessage = 'must be a number between 5 and 11 ';
         }
         return { ...state, players_a_side: { value: action.payload, errorMessage } };
@@ -22,7 +24,7 @@ const reducer = (state, action) => {
     case 'overs':
       {
         let errorMessage = '';
-        if (!(/[0-9]{1,}/.test(action.payload))) {
+        if (!(/^\d+$/.test(action.payload))) {
           errorMessage = 'must be a number > 0';
         } else {
           if (parseInt(action.payload) === 0) {
@@ -34,7 +36,7 @@ const reducer = (state, action) => {
     case 'team1Name':
       {
         let errorMessage = '';
-        if (!(/[\w- ]{2,30}/.test(action.payload))) {
+        if (!(/^[\w -]{2,30}$/.test(action.payload))) {
           errorMessage = 'Team name must only contain characters,digits,-,whitespace,_ and length must be between 2 and 30';
         }
         return { ...state, team1Name: { value: action.payload, errorMessage } };
@@ -42,7 +44,7 @@ const reducer = (state, action) => {
     case 'team2Name':
       {
         let errorMessage = '';
-        if (!(/[\w- ]{2,30}/.test(action.payload))) {
+        if (!(/^[\w- ]{2,30}$/.test(action.payload))) {
           errorMessage = 'Team name must only contain characters,digits,-,whitespace,_ and length must be between 2 and 30';
         }
         return { ...state, team2Name: { value: action.payload, errorMessage } };
@@ -59,20 +61,22 @@ const reducer = (state, action) => {
 const CreateMatchScreen = ({ navigation }) => {
   const { State, setTeamInfo, initializeState } = useContext(DataContext);
   const [teamInfo, dispatch] = useReducer(reducer, {
-    players_a_side: { value: '5', errorMessage: '' },
-    overs: { value: '12', errorMessage: '' },
-    team1Name: { value: 'A1', errorMessage: '' },
-    team2Name: { value: 'A2', errorMessage: '' },
-    tossWonBy: { selected: 'A1', isClicked: false },
-    battingTeam: { selected: 'A2', isClicked: false }
+    players_a_side: { value: '', errorMessage: '' },
+    overs: { value: '', errorMessage: '' },
+    team1Name: { value: '', errorMessage: '' },
+    team2Name: { value: '', errorMessage: '' },
+    tossWonBy: { selected: '', isClicked: false },
+    battingTeam: { selected: '', isClicked: false }
   })
   useEffect(() => {
     initializeState();
   }, []);
-  const team1NameValidation = /[\w- ]{2,30}/.test(teamInfo.team1Name.value);
-  const team2NameValidation = /[\w- ]{2,30}/.test(teamInfo.team2Name.value);
-  const oversValidation = /[0-9]{1,}/.test(teamInfo.overs.value);
-  const playersPerSideValidation = /[0-9]{1,}/.test(teamInfo.players_a_side.value);
+  const team1NameValidation = /^[\w- ]{2,30}$/.test(teamInfo.team1Name.value);
+  const team2NameValidation = /^[\w- ]{2,30}$/.test(teamInfo.team2Name.value);
+  const oversValidation = /^[0-9]+$/.test(teamInfo.overs.value);
+  const playersPerSideValidation = (/^\d+$/.test(teamInfo.players_a_side.value)
+    && parseInt(teamInfo.players_a_side.value) >= 5
+    && parseInt(teamInfo.players_a_side.value) <= 11);
   const tossWonByValidation = teamInfo.tossWonBy.selected !== '';
   const battingTeamValidation = teamInfo.battingTeam.selected !== '';
   const teamInfoValidaton = team1NameValidation && team2NameValidation && oversValidation
@@ -127,8 +131,10 @@ const CreateMatchScreen = ({ navigation }) => {
             <SlideList
               data={[teamInfo.team1Name.value, teamInfo.team2Name.value]}
               value={teamInfo.tossWonBy}
-              onSelect={(isClicked, selected) => dispatch({ type: 'tossWonBy',
-               payload: { isClicked, selected } })}
+              onSelect={(isClicked, selected) => dispatch({
+                type: 'tossWonBy',
+                payload: { isClicked, selected }
+              })}
             />
           </View>
 
@@ -141,8 +147,10 @@ const CreateMatchScreen = ({ navigation }) => {
             <SlideList
               data={[teamInfo.team1Name.value, teamInfo.team2Name.value]}
               value={teamInfo.battingTeam}
-              onSelect={(isClicked, selected) => dispatch({ type: 'battingTeam',
-               payload: { isClicked, selected } })}
+              onSelect={(isClicked, selected) => dispatch({
+                type: 'battingTeam',
+                payload: { isClicked, selected }
+              })}
             />
           </View>
         </View>

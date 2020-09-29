@@ -102,7 +102,7 @@ const reducer = (state, action) => {
             modalVisible = true;
         }
         //console.log('clicked',inningsChange,modalVisible);
-        if (state.modalVisible === true)
+        if (state.modalVisible === true || state.inningsChange === true || state.gameFinished === true)
           return state;
         else
           return {
@@ -110,13 +110,15 @@ const reducer = (state, action) => {
             team1Batting: state.battingTeam === 'team1' ?
               {
                 ...state.team1Batting, overs: state.team1Batting.overs + 1,
-                batsmen: modifiedBattingWickets, runs: state.team1Batting.runs + payload
+                batsmen: modifiedBattingWickets, runs: state.team1Batting.runs + payload,
+                runHistory: [...state.team1Batting.runHistory, state.team1Batting.runs + payload]
               }
               : state.team1Batting,
             team2Batting: state.battingTeam === 'team2' ?
               {
                 ...state.team2Batting, overs: state.team2Batting.overs + 1,
-                batsmen: modifiedBattingWickets, runs: state.team2Batting.runs + payload
+                batsmen: modifiedBattingWickets, runs: state.team2Batting.runs + payload,
+                runHistory: [...state.team2Batting.runHistory, state.team2Batting.runs + payload]
               }
               : state.team2Batting,
             team1Bowling: state.bowlingTeam === 'team1' ?
@@ -136,7 +138,7 @@ const reducer = (state, action) => {
             gameFinished
           }
       }
-    case 'wide_or_no': {
+    case 'wide': {
       const payload = parseInt(action.payload.value);
       const st = payload ? `${payload}${action.payload.type}` : `${action.payload.type}`; //
       const strikeChange = payload % 2 === 1 ? true : false;
@@ -206,6 +208,87 @@ const reducer = (state, action) => {
           key: state.key + 1,
           inningsChange
         }
+    }
+    case 'N': {
+      const payload = parseInt(action.payload.runs);
+      const st = payload ? `${payload}N` : 'N'; //
+      const strikeChange = payload % 2 === 1 ? true : false;
+      const player1 = {
+        ...state.player1,
+        onStrike: strikeChange ? !state.player1.onStrike : state.player1.onStrike,
+        runs: state.player1.onStrike && action.payload.run_Type.name === 'bat'
+          ? state.player1.runs + 1
+          : state.player1.runs,
+        balls: state.player1.onStrike ? state.player1.balls + 1 : state.player1.balls
+
+      };
+      const player2 = {
+        ...state.player2,
+        onStrike: strikeChange ? !state.player2.onStrike : state.player2.onStrike,
+        runs: state.player2.onStrike && action.payload.run_Type.name === 'bat'
+          ? state.player2.runs + 1
+          : state.player2.runs,
+        balls: state.player2.onStrike ? state.player2.balls + 1 : state.player2.balls
+      };
+      const Bowler = {
+        ...state.Bowler,
+        runs: state.Bowler.runs + 1 + payload,
+        ballsThisOver: state.Bowler.ballsThisOver + 1
+      };
+      let modifiedBowlers = [];
+      if (state.bowlingTeam === 'team1') {
+        if (state.team1Bowling)
+          modifiedBowlers = state.team1Bowling.filter((item) => item.name !== state.Bowler.name);
+      } else {
+        if (state.team2Bowling)
+          modifiedBowlers = state.team2Bowling.filter((item) => item.name !== state.Bowler.name);
+      }
+      modifiedBowlers.push({
+        ...Bowler
+      });
+      let inningsChange = false;
+      if (state.battingTeam === 'team1') {
+        if (state.noOfInnings === 1 && state.team1Batting.runs + payload + 1 > state.team2Batting.runs) {
+          inningsChange = true;
+        }
+      } else {
+        if (state.noOfInnings === 1 && state.team2Batting.runs + payload + 1 > state.team1Batting.runs) {
+          inningsChange = true;
+        }
+      }
+      if (state.modalVisible === true)
+        return state;
+      else
+        return {
+          ...state,
+          team1Batting: state.battingTeam === 'team1' ?
+            {
+              ...state.team1Batting,
+              runs: state.team1Batting.runs + payload + 1,
+              extras: state.team1Batting.extras + payload + 1
+            }
+            : state.team1Batting,
+          team2Batting: state.battingTeam === 'team2' ?
+            {
+              ...state.team2Batting,
+              runs: state.team2Batting.runs + payload + 1,
+              extras: state.team2Batting.extras + payload + 1
+            }
+            : state.team2Batting,
+          team1Bowling: state.bowlingTeam === 'team1' ?
+            [...modifiedBowlers]
+            : state.team1Bowling,
+          team2Bowling: state.bowlingTeam === 'team2' ?
+            [...modifiedBowlers]
+            : state.team2Bowling,
+          player1,
+          player2,
+          Bowler,
+          ThisOver: [...state.ThisOver, { id: state.key + 1, value: st }],
+          key: state.key + 1,
+          inningsChange
+        }
+
     }
     case 'byes': {
       const payload = parseInt(action.payload.value);
@@ -309,14 +392,16 @@ const reducer = (state, action) => {
             {
               ...state.team1Batting, overs: state.team1Batting.overs + 1,
               batsmen: modifiedBattingWickets, runs: state.team1Batting.runs + payload,
-              extras: state.team1Batting.extras + 1
+              extras: state.team1Batting.extras + 1,
+              runHistory: [...state.team1Batting.runHistory, state.team1Batting.runs + payload]
             }
             : state.team1Batting,
           team2Batting: state.battingTeam === 'team2' ?
             {
               ...state.team2Batting, overs: state.team2Batting.overs + 1,
               batsmen: modifiedBattingWickets, runs: state.team2Batting.runs + payload,
-              extras: state.team2Batting.extras + 1
+              extras: state.team2Batting.extras + 1,
+              runHistory: [...state.team2Batting.runHistory, state.team2Batting.runs + payload]
             }
             : state.team2Batting,
           team1Bowling: state.bowlingTeam === 'team1' ?
@@ -403,7 +488,6 @@ const reducer = (state, action) => {
             }
             onStrikeBatsman = state.player1.onStrike ? player1 : player2;
             newBatsman = {
-
               name: payload.wicketState.newBatsman.selected,
               runs: 0, balls: 0, fours: 0, sixes: 0, out: false,
               strikeRate: 0, onStrike: true, battingPosition: state.battingPosition + 1
@@ -421,11 +505,13 @@ const reducer = (state, action) => {
             modifiedBowling.push({ ...Bowler });
             if (state.battingTeam === 'team1') {
               modifiedBattingWickets = state.team1Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => item.name !== onStrikeBatsman.name
+                  && item.name !== newBatsman.name
               )
             } else {
               modifiedBattingWickets = state.team2Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => item.name !== onStrikeBatsman.name
+                  && item.name !== newBatsman.name
               )
             }
             modifiedBattingWickets.push({ ...onStrikeBatsman });
@@ -502,7 +588,8 @@ const reducer = (state, action) => {
                     ...state.team1Batting,
                     overs: state.team1Batting.overs + 1,
                     wickets: state.team1Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team1Batting.runHistory, state.team1Batting.runs]
                   }
                   : state.team1Batting,
                 team2Batting: state.battingTeam === 'team2' ?
@@ -510,7 +597,8 @@ const reducer = (state, action) => {
                     ...state.team2Batting,
                     overs: state.team2Batting.overs + 1,
                     wickets: state.team2Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team2Batting.runHistory, state.team2Batting.runs]
                   }
                   : state.team2Batting,
                 Bowler,
@@ -578,11 +666,17 @@ const reducer = (state, action) => {
             modifiedBowling.push({ ...Bowler });
             if (state.battingTeam === 'team1') {
               modifiedBattingWickets = state.team1Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => {
+                  return item.name !== onStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             } else {
               modifiedBattingWickets = state.team2Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => {
+                  return item.name !== onStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             }
             modifiedBattingWickets.push({ ...onStrikeBatsman });
@@ -660,7 +754,8 @@ const reducer = (state, action) => {
                     ...state.team1Batting,
                     overs: state.team1Batting.overs + 1,
                     wickets: state.team1Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team1Batting.runHistory, state.team1Batting.runs]
                   }
                   : state.team1Batting,
                 team2Batting: state.battingTeam === 'team2' ?
@@ -668,7 +763,8 @@ const reducer = (state, action) => {
                     ...state.team2Batting,
                     overs: state.team2Batting.overs + 1,
                     wickets: state.team2Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team2Batting.runHistory, state.team2Batting.runs]
                   }
                   : state.team2Batting,
                 Bowler,
@@ -736,11 +832,17 @@ const reducer = (state, action) => {
             modifiedBowling.push({ ...Bowler });
             if (state.battingTeam === 'team1') {
               modifiedBattingWickets = state.team1Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => {
+                  return item.name !== onStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             } else {
               modifiedBattingWickets = state.team2Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => {
+                  return item.name !== onStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             }
             modifiedBattingWickets.push({ ...onStrikeBatsman });
@@ -818,7 +920,8 @@ const reducer = (state, action) => {
                     ...state.team1Batting,
                     overs: state.team1Batting.overs + 1,
                     wickets: state.team1Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team1Batting.runHistory, state.team1Batting.runs]
                   }
                   : state.team1Batting,
                 team2Batting: state.battingTeam === 'team2' ?
@@ -826,7 +929,8 @@ const reducer = (state, action) => {
                     ...state.team2Batting,
                     overs: state.team2Batting.overs + 1,
                     wickets: state.team2Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team2Batting.runHistory, state.team2Batting.runs]
                   }
                   : state.team2Batting,
                 Bowler,
@@ -896,11 +1000,17 @@ const reducer = (state, action) => {
             modifiedBowling.push({ ...Bowler });
             if (state.battingTeam === 'team1') {
               modifiedBattingWickets = state.team1Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => {
+                  return item.name !== onStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             } else {
               modifiedBattingWickets = state.team2Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => {
+                  return item.name !== onStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             }
             modifiedBattingWickets.push({ ...onStrikeBatsman });
@@ -982,7 +1092,8 @@ const reducer = (state, action) => {
                     ...state.team1Batting,
                     overs: state.team1Batting.overs + 1,
                     wickets: state.team1Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team1Batting.runHistory, state.team1Batting.runs]
                   }
                   : state.team1Batting,
                 team2Batting: state.battingTeam === 'team2' ?
@@ -990,7 +1101,8 @@ const reducer = (state, action) => {
                     ...state.team2Batting,
                     overs: state.team2Batting.overs + 1,
                     wickets: state.team2Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team2Batting.runHistory, state.team2Batting.runs]
                   }
                   : state.team2Batting,
                 Bowler,
@@ -1060,11 +1172,17 @@ const reducer = (state, action) => {
             modifiedBowling.push({ ...Bowler });
             if (state.battingTeam === 'team1') {
               modifiedBattingWickets = state.team1Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => {
+                  return item.name !== onStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             } else {
               modifiedBattingWickets = state.team2Batting.batsmen.filter(
-                (item) => { return item.name !== onStrikeBatsman.name }
+                (item) => {
+                  return item.name !== onStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             }
             modifiedBattingWickets.push({ ...onStrikeBatsman });
@@ -1142,7 +1260,8 @@ const reducer = (state, action) => {
                     ...state.team1Batting,
                     overs: state.team1Batting.overs + 1,
                     wickets: state.team1Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team1Batting.runHistory, state.team1Batting.runs]
                   }
                   : state.team1Batting,
                 team2Batting: state.battingTeam === 'team2' ?
@@ -1150,7 +1269,8 @@ const reducer = (state, action) => {
                     ...state.team2Batting,
                     overs: state.team2Batting.overs + 1,
                     wickets: state.team2Batting.wickets + 1,
-                    batsmen: modifiedBattingWickets
+                    batsmen: modifiedBattingWickets,
+                    runHistory: [...state.team2Batting.runHistory, state.team2Batting.runs]
                   }
                   : state.team2Batting,
                 Bowler,
@@ -1213,11 +1333,17 @@ const reducer = (state, action) => {
             modifiedBowling.push({ ...Bowler });
             if (state.battingTeam === 'team1') {
               modifiedBattingWickets = state.team1Batting.batsmen.filter(
-                (item) => { return item.name !== offStrikeBatsman.name }
+                (item) => {
+                  return item.name !== offStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             } else {
               modifiedBattingWickets = state.team2Batting.batsmen.filter(
-                (item) => { return item.name !== offStrikeBatsman.name }
+                (item) => {
+                  return item.name !== offStrikeBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             }
             modifiedBattingWickets.push({ ...offStrikeBatsman });
@@ -1283,6 +1409,7 @@ const reducer = (state, action) => {
           }
         case 'RO':
           {
+            //console.log('no',payload.wicketState.noBall);
             const runType = payload.run_Type.name;
             const runs = parseInt(payload.runs);
             player1 = payload.wicketState.batsmanWhoRanOut.selected === state.player1.name ? {
@@ -1313,8 +1440,8 @@ const reducer = (state, action) => {
               }
             Bowler = {
               ...state.Bowler,
-              overs: runType !== 'wd' || runType !== 'nb' ? state.Bowler.overs + 1 : state.Bowler.overs,
-              runs: runType !== 'wd' || runType !== 'nb' ? state.Bowler.runs + runs : state.Bowler.runs + runs + 1
+              overs: runType !== 'wd' && !payload.wicketState.noBall ? state.Bowler.overs + 1 : state.Bowler.overs,
+              runs: runType !== 'wd' && !payload.wicketState.noBall ? state.Bowler.runs + runs : state.Bowler.runs + runs + 1
             }
             const newBatsmanOnStrike = payload.wicketState.hasStrikeChanged;
 
@@ -1343,11 +1470,17 @@ const reducer = (state, action) => {
             modifiedBowling.push({ ...Bowler });
             if (state.battingTeam === 'team1') {
               modifiedBattingWickets = state.team1Batting.batsmen.filter(
-                (item) => { return item.name !== ranOutBatsman.name }
+                (item) => {
+                  return item.name !== ranOutBatsman.name
+                    && item.name !== newBatsman.name
+                }
               )
             } else {
               modifiedBattingWickets = state.team2Batting.batsmen.filter(
-                (item) => { return item.name !== ranOutBatsman }
+                (item) => {
+                  return item.name !== ranOutBatsman
+                    && item.name !== newBatsman.name
+                }
               )
             }
             modifiedBattingWickets.push({ ...ranOutBatsman });
@@ -1358,7 +1491,7 @@ const reducer = (state, action) => {
             let ThisOver = [];
             let ballsThisOver = 0;
             let modalVisible = false;
-            if (runType !== 'wd' && runType !== 'nb') {
+            if (runType !== 'wd' && payload.wicketState.noBall !== false) {
               if (state.battingTeam === 'team1') {
                 if ((state.oversPerSide * 6) === (state.team1Batting.overs + 1)) {
                   inningsChange = true;
@@ -1383,7 +1516,7 @@ const reducer = (state, action) => {
             if (inningsChange === true) {
               ballsThisOver = 0;
             } else {
-              if (runType !== 'wd' && runType !== 'nb') {
+              if (runType !== 'wd' && payload.wicketState.noBall !== true) {
                 ballsThisOver = (state.ballsThisOver + 1) >= 6
                   ? 6
                   : state.ballsThisOver + 1
@@ -1394,7 +1527,7 @@ const reducer = (state, action) => {
             if (inningsChange === true) {
               modalVisible = false;
             } else {
-              if (runType !== 'wd' && runType !== 'nb') {
+              if (runType !== 'wd' && payload.wicketState.noBall !== true) {
                 if (state.ballsThisOver === 5)
                   modalVisible = true;
               } else {
@@ -1424,6 +1557,7 @@ const reducer = (state, action) => {
               modalVisible = false;
               changeBowler = false;
             }
+
             if (state.modalVisible === true)
               return state;
             else
@@ -1438,21 +1572,42 @@ const reducer = (state, action) => {
                 team1Batting: state.battingTeam === 'team1' ?
                   {
                     ...state.team1Batting,
-                    runs: runType === 'wd' ? state.team1Batting.runs + runs + 1 : state.team1Batting.runs + runs,
-                    overs: state.team1Batting.overs + 1,
+                    runs: runType === 'wd' || payload.wicketState.noBall === true
+                      ? state.team1Batting.runs + runs + 1
+                      : state.team1Batting.runs + runs,
+                    overs: runType === 'wd' || payload.wicketState.noBall === true
+                    ? state.team1Batting.overs
+                    : state.team1Batting.overs+1,
                     wickets: state.team1Batting.wickets + 1,
                     batsmen: modifiedBattingWickets,
-                    extras: runType !== 'bat' ? runs + (runType === 'wd' ? 1 : 0) : state.team1Batting.extras
+                    extras: runType !== 'bat'
+                      ? runs + (runType === 'wd' || payload.wicketState.noBall === true
+                        ? 1
+                        : 0)
+                      : state.team1Batting.extras,
+                    runHistory: (runType !== 'wd' && payload.wicketState.noBall !== true)
+                      ? [...state.team1Batting.runHistory, state.team1Batting.runs + runs]
+                      : state.team1Batting.runHistory
                   }
                   : state.team1Batting,
                 team2Batting: state.battingTeam === 'team2' ?
                   {
                     ...state.team2Batting,
-                    runs: runType === 'wd' ? state.team2Batting.runs + runs + 1 : state.team2Batting.runs + runs,
-                    overs: state.team2Batting.overs + 1,
+                    runs: runType === 'wd' || payload.wicketState.noBall === true
+                      ? state.team2Batting.runs + runs + 1
+                      : state.team2Batting.runs + runs,
+                    overs: runType === 'wd' || payload.wicketState.noBall === true
+                      ? state.team2Batting.overs
+                      : state.team2Batting.overs+1,
                     wickets: state.team2Batting.wickets + 1,
                     batsmen: modifiedBattingWickets,
-                    extras: runType !== 'bat' ? runs + (runType === 'wd' ? 1 : 0) : state.team2Batting.extras
+                    extras: runType !== 'bat'
+                      ? runs + (runType === 'wd' || payload.wicketState.noBall === true
+                        ? 1 : 0)
+                      : state.team2Batting.extras,
+                    runHistory: (runType !== 'wd' && payload.wicketState.noBall !== true)
+                      ? [...state.team2Batting.runHistory, state.team2Batting.runs + runs]
+                      : state.team2Batting.runHistory
                   }
                   : state.team2Batting,
                 Bowler,
@@ -1520,10 +1675,10 @@ const reducer = (state, action) => {
         team2Name: action.payload.team2Name.value,
         playersPerSide: parseInt(action.payload.players_a_side.value),
         oversPerSide: parseInt(action.payload.overs.value),
-        battingTeam: action.payload.team1Name.value === action.payload.battingTeam.value
+        battingTeam: action.payload.team1Name.value === action.payload.battingTeam.selected
           ? 'team1'
           : 'team2',
-        bowlingTeam: action.payload.team1Name.value === action.payload.battingTeam.value
+        bowlingTeam: action.payload.team1Name.value === action.payload.battingTeam.selected
           ? 'team2'
           : 'team1',
         tossWonBy: action.payload.tossWonBy.selected === action.payload.team1Name.value
@@ -1703,6 +1858,8 @@ const reducer = (state, action) => {
           extras: 0,
           wickets: 0,
           overs: 0,
+          runHistory: [],
+          fallOfWickets: [],
           batsmen: []
         },
         team2Batting: {
@@ -1710,6 +1867,8 @@ const reducer = (state, action) => {
           extras: 0,
           wickets: 0,
           overs: 0,
+          runHistory: [],
+          fallOfWickets: [],
           batsmen: []
         },
         modalVisible: false,
@@ -1738,8 +1897,10 @@ const addRuns = (dispatch) => {
     if (found)
       dispatch({ type: 'bat', payload: type });
     else {
-      if (type === 'Wd' || type === 'N')
-        dispatch({ type: 'wide_or_no', payload: { type, value: payload } });
+      if (type === 'Wd')
+        dispatch({ type: 'wide', payload: { type, value: payload } });
+      else if (type === 'N')
+        dispatch({ type, payload });
       else if (type === 'LB' || type === 'B')
         dispatch({ type: 'byes', payload: { type, value: payload } });
     }

@@ -1,6 +1,6 @@
 import React, { useState, useReducer, useContext } from 'react';
 import Icon from 'react-native-vector-icons/AntDesign';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity,Modal } from 'react-native';
 import { BottomSheet, CheckBox } from 'react-native-elements';
 import ButtonRow from './ButtonRow';
 import SlideList from './SlideList';
@@ -31,19 +31,21 @@ const reducer = (state, action) => {
         batsmanWhoRanOut: { selected: '', isClicked: false },
         batsmanWhoTimedOut: { selected: '', isClicked: false },
         stumper: { selected: '', isClicked: false },
-        hasStrikeChanged:false
+        hasStrikeChanged: false
       };
     case 'ran_out':
       return { ...state, batsmanWhoRanOut: { selected: action.payload.selected, isClicked: action.payload.isClicked } };
     case 'strike_change':
-      return { ...state,hasStrikeChanged:!state.hasStrikeChanged };
+      return { ...state, hasStrikeChanged: !state.hasStrikeChanged };
+    case 'no_ball':
+      return {...state,noBall:!state.noBall};
     default:
       return state;
   }
 }
 
-const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, header, onSubmit,dataList }) => {
-  const { State,wicket } = useContext(DataContext);
+const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, header, onSubmit, dataList }) => {
+  const { State, wicket,addRuns } = useContext(DataContext);
   const [wicketState, dispatch] = useReducer(reducer, {
     newBatsman: { selected: '', isClicked: false },
     catcher: { selected: '', isClicked: false },
@@ -51,14 +53,14 @@ const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, hea
     batsmanWhoRanOut: { selected: '', isClicked: false },
     batsmanWhoTimedOut: { selected: '', isClicked: false },
     stumper: { selected: '', isClicked: false },
-    hasStrikeChanged: false
+    hasStrikeChanged: false,
+    noBall:false
   })
   const [runType, setRuntype] = useState([
     { name: 'bat', isClicked: false },
     { name: 'lb', isClicked: false },
     { name: 'b', isClicked: false },
-    { name: 'wd', isClicked: false },
-    { name: 'nb', isClicked: false }
+    { name: 'wd', isClicked: false }
   ])
 
   const [run, setRun] = useState([
@@ -70,6 +72,56 @@ const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, hea
     { name: '5', isClicked: false },
     { name: '6', isClicked: false }
   ])
+  const renderNoBall = () => <View>
+    <View style={{ flexDirection: 'row', marginBottom: 5 }}>
+      <Text style={{
+        color: defaultColor, fontSize: 16,
+        fontWeight: '500', padding: 5, alignSelf: 'flex-end', flex: 1
+      }}>
+        runType:
+      </Text>
+      <View style={{ flex: 4 }}>
+        <ClickableButtonGroup
+          initialState={runType.filter((item)=>item.name !== 'nb' && item.name!=='wd')}
+          onPress={(type, payload) => {
+            const temp = [];
+            runType.map((item) => {
+              if (item.name !== type)
+                temp.push({ ...item, isClicked: false });
+              else {
+                temp.push({ ...item, isClicked: true });
+              }
+            })
+            setRuntype(temp);
+          }} />
+      </View>
+    </View>
+    <View style={{ flexDirection: 'row', marginBottom: 5 }}>
+      <Text style={{
+        color: defaultColor, fontSize: 16,
+        fontWeight: '500', padding: 5, alignSelf: 'flex-end', flex: 1
+      }}>
+        runs:
+      </Text>
+      <View style={{ flex: 4 }}>
+        <ClickableButtonGroup
+          initialState={run}
+          onPress={(type, payload) => {
+            const temp = [];
+            run.map((item) => {
+              if (item.name !== type)
+                temp.push({ ...item, isClicked: false });
+              else {
+                temp.push({ ...item, isClicked: true });
+              }
+            })
+            setRun(temp);
+          }}
+        />
+      </View>
+
+    </View>
+  </View>
 
   const renderRunout = () => <View>
     <View style={{ flexDirection: 'row', marginBottom: 5 }}>
@@ -109,6 +161,20 @@ const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, hea
         <SlideList data={dataList.fielders} value={wicketState.thrower} onSelect={(isClicked, selected) => dispatch({ type: 'thrower', payload: { selected, isClicked } })} />
       </View>
 
+    </View>
+    <View style={{ flexDirection: 'row' }}>
+      <View style={{ flex: 1 }} />
+      <View style={{ flex: 4 }}>
+        <CheckBox
+          onPress={() => dispatch({ type: 'no_ball' })}
+          title='No ball'
+          checked={wicketState.noBall}
+          uncheckedColor='#f0245a'
+          checkedColor='#f0245a'
+          textStyle={styles.checkBoxTitleStyle}
+          containerStyle={styles.checkboxContainerStyle}
+        />
+      </View>
     </View>
     <View style={{ flexDirection: 'row', marginBottom: 5 }}>
       <Text style={{
@@ -199,7 +265,7 @@ const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, hea
     <View style={{ flexDirection: 'row' }}>
       <Text style={{ color: defaultColor, fontSize: 16, fontWeight: '500', padding: 5, alignSelf: 'center', flex: 2 }}>{name}</Text>
       <View style={{ flex: 4 }}>
-        <SlideList  value={wicketState.batsmanWhoTimedOut} onSelect={(isClicked, selected) => dispatch({ type: 'TO', payload: { selected, isClicked } })} />
+        <SlideList value={wicketState.batsmanWhoTimedOut} onSelect={(isClicked, selected) => dispatch({ type: 'TO', payload: { selected, isClicked } })} />
       </View>
     </View>
   </View>
@@ -213,11 +279,12 @@ const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, hea
     </View>
   </View>
 
-  if(calledBy === 'B' || calledBy === 'LB'){
-    data = data.filter((item) => item.name!=='0');
+  if (calledBy === 'B' || calledBy === 'LB') {
+    data = data.filter((item) => item.name !== '0');
   }
-  return <View>
-    <BottomSheet isVisible={isVisible}>
+  //console.log(calledBy)
+  return <View style={{borderWidth:2,borderColor:'#f0245a'}}>
+    <Modal isVisible={isVisible}>
       <View style={styles.containerStyle}>
         <View style={{ alignItems: 'flex-start', height: 40, width: 60, padding: 10 }}>
           <TouchableOpacity onPress={() => {
@@ -231,30 +298,46 @@ const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, hea
             />
           </TouchableOpacity>
         </View>
-        <ScrollView>
+        <ScrollView contentContainerStyle={{justifyContent:'center'}}>
           <View style={{ padding: 10, alignSelf: 'center' }}>
             <Text style={{ color: defaultColor }}>{header}</Text>
           </View>
+          {
+            calledBy !== 'N'
+              ? <View style={{ marginBottom: 10 }}>
+                <ButtonRow
+                  color={defaultColor}
+                  size={40}
+                  data={data}
+                  calledBy={calledBy}
+                />
+              </View> : renderNoBall()
+          }
 
-          <View style={{ marginBottom: 10 }}>
-            <ButtonRow
-              color={defaultColor}
-              size={40}
-              data={data}
-              calledBy={calledBy}
-            />
-          </View>
           {type === 'C' ? renderCatcher('Catcher:') : null}
           {type === 'St' ? renderStumper('Wicket Keeper:') : null}
           {type === 'TO' ? renderTO('Out:') : null}
           {type === 'RO' ? renderRunout() : null}
           {type !== '0' ? renderNewBatsman('New batsman:') : null}
         </ScrollView>
-        {(type !== '0') ? <Button name='submit'
+        {(type !== '0' || calledBy === 'N') ? <Button name='submit'
           onPress={() => {
-            console.log({
-              type: calledBy,
-              payload: {
+            // console.log({
+            //   type: calledBy,
+            //   payload: {
+            //     type,
+            //     wicketState,
+            //     run_Type: runType.find((item) => item.isClicked === true)
+            //       ? runType.find((item) => item.isClicked === true)
+            //       : '',
+            //     runs: run.find((item) => item.isClicked === true)
+            //       ? run.find((item) => item.isClicked === true).name
+            //       : ''
+            //   }
+
+            // });
+            calledBy !== 'N'
+              ? wicket(calledBy, {
                 type,
                 wicketState,
                 run_Type: runType.find((item) => item.isClicked === true)
@@ -263,19 +346,18 @@ const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, hea
                 runs: run.find((item) => item.isClicked === true)
                   ? run.find((item) => item.isClicked === true).name
                   : ''
-              }
+              })
+              : addRuns(calledBy, {
+                type,
+                wicketState,
+                run_Type: runType.find((item) => item.isClicked === true)
+                  ? runType.find((item) => item.isClicked === true)
+                  : '',
+                runs: run.find((item) => item.isClicked === true)
+                  ? run.find((item) => item.isClicked === true).name
+                  : ''
+              });
 
-            });
-            wicket(calledBy, {
-              type,
-              wicketState,
-              run_Type: runType.find((item) => item.isClicked === true)
-                ? runType.find((item) => item.isClicked === true)
-                : '',
-              runs: run.find((item) => item.isClicked === true)
-                ? run.find((item) => item.isClicked === true).name
-                : ''
-            })
             dispatch({ type: 'submit' });
             changeVisibility();
           }
@@ -287,7 +369,7 @@ const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, hea
         }
       </View>
 
-    </BottomSheet>
+    </Modal>
   </View>
 
 
@@ -295,7 +377,7 @@ const CusBottomSheet = ({ isVisible, data, calledBy, changeVisibility, type, hea
 
 const styles = StyleSheet.create({
   containerStyle: {
-    backgroundColor: 'white', height: 300
+    backgroundColor: 'white',flex:1
   },
   checkBoxTitleStyle: {
     color: '#f0245a'

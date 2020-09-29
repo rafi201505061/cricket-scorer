@@ -10,7 +10,18 @@ const HomeScreen = ({ navigation }) => {
   const { getMatch } = useContext(DataContext);
   const getMatches = async () => {
     const matches = await AsyncStorage.getItem('matches');
-    matches ? setMyMatches(JSON.parse(matches)) : setMyMatches([]);
+    //console.log(matches);
+    if(matches)
+    {
+      const tempMatches = JSON.parse(matches);
+      let matchesArray = [];
+      tempMatches.forEach((item)=>{
+        matchesArray.push(JSON.parse(item));
+      })
+      setMyMatches(matchesArray);
+    }else{
+      setMyMatches([]);
+    }
   }
   const clearAppData = async function () {
     try {
@@ -21,31 +32,52 @@ const HomeScreen = ({ navigation }) => {
       console.error('Error clearing app data.');
     }
   }
+  const deleteMatch = (id) => {
+    var modifiedMyMatches = [];
+    myMatches.forEach((item)=>{
+      if(item.matchId!==id)
+      modifiedMyMatches.push(item);
+    })
+    return modifiedMyMatches;
+  }
+  const setMatchesInStorage = async (id) => {
+    try {
+      AsyncStorage.clear();
+      const matches = deleteMatch(id);
+      let temp = [];
+      matches.forEach((item)=>temp.push(JSON.stringify(item)));
+      await AsyncStorage.setItem('matches', JSON.stringify(temp));
+      setMyMatches(matches);
+    } catch (error) {
+      console.log('error');
+    }
+  }
   useEffect(() => {
     getMatches();
   }, []);
 
   return <SafeAreaView>
     <FlatList
-      data={myMatches}
+      data={myMatches.sort((a,b)=>a.matchId<b.matchId)}
       keyExtractor={(item) => {
-        const titem = JSON.parse(item);
-        return titem.matchId;
+        return item.matchId;
       }}
       renderItem={({ item }) => {
-        const titem = JSON.parse(item);
         return <Card
           data={{
-            team1Name: titem.team1Name,
-            team2Name: titem.team2Name,
-            time: titem.time,
-            date: titem.date
+            team1Name: item.team1Name,
+            team2Name: item.team2Name,
+            time: item.time,
+            date: item.date
           }}
           onPress={() => {
-            getMatch(titem);
+            getMatch(item);
             navigation.navigate('ScoreCardScreen');
           }
           }
+          onDelete={()=>{
+            setMatchesInStorage(item.matchId);
+          }}
         />
       }}
     />

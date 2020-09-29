@@ -1,9 +1,12 @@
 import React, { useContext, useReducer, useState, useEffect, useFocusEffect } from 'react';
-import { StyleSheet, Alert, ScrollView, View, Image,BackHandler } from 'react-native';
+import { StyleSheet, ScrollView, View, Image,TouchableOpacity } from 'react-native';
 import Button from '../components/Button';
 import { Context as DataContext } from '../Context/DataContext';
 import ScoreCard from '../components/ScoreCard';
 import BowlingScoreCard from '../components/BowlingScoreCard';
+import RunsLineChart from '../components/RunsLineChart';
+import RunsBarChart from '../components/RunsBarChart';
+import Icon from 'react-native-vector-icons/AntDesign';
 
 const defaultColor = '#f0245a';
 const reducer = (state, action) => {
@@ -102,31 +105,31 @@ const ScoreCardScreen = ({ navigation }) => {
   useEffect(() => {
     dispatch({ type: '1' });
   }, []);
-
-
-  useFocusEffect(
-    React.useCallback(() => {
-      const onBackPress = () => {
-        Alert.alert(
-          "You're still editing!",
-          "Are you sure you want to go home with your edits not saved?",
-          [
-            { text: "Keep Editing", onPress: () => {}, style: "cancel" },
-            { text: "Go Home", onPress: () => this.props.navigation.goBack() },
-          ],
-          { cancelable: false },
-        );
-        return true;
-      };
-
-      BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-      return () =>
-        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-    }, [])
-  );
-
   return <View>
+    <View style={{
+      flexDirection: 'row',
+      height: 65, backgroundColor: '#f0245a'
+    }}>
+      <View style={{ flex: .9, alignItems: 'flex-start', justifyContent: 'center' }}>
+        <TouchableOpacity onPress={navigation.openDrawer}>
+          <Icon
+            style={{ marginLeft: 10,marginTop:10 }}
+            name='bars'
+            size={26}
+            color='#515452'
+          />
+        </TouchableOpacity>
+      </View>
+      <View style={{ flex: 1.1, alignItems: 'flex-start', justifyContent: 'center' }}>
+        <Image
+          source={require('../../assets/logo1.png')}
+          style={{
+            height: 50,
+            width: 50,marginTop:10
+          }}
+        />
+      </View>
+    </View>
     <View style={styles.headerStyle}>
       <View style={
         {
@@ -171,7 +174,7 @@ const ScoreCardScreen = ({ navigation }) => {
 
 ScoreCardScreen.navigationOptions = ({ navigation }) => {
   return {
-    headerTitle: () => <Image source={require('../../assets/logo1.png')} style={{ height: 50, width: 50, margin: 4, marginLeft: 90 }} />
+    headerShown:false
   }
 };
 
