@@ -9,4 +9,5 @@ cricket-scorer
 <div>
 <h1>Framework</h1>
 <p>Code is written completely using <b>REACT-NATIVE</b> javascript framework.<b>REDUX</b> was not used ,instead I built REDUX-like module and used that. </p>
+  <p>EXPO-CLI was used to initialize and build this project.</p>
 </div>
